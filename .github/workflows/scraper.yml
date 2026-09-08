@@ -1,9 +1,24 @@
 name: MCQ Web Scraper Workflow
 
 on:
-  schedule:
-    - cron: '0 0 * * 0'  # Runs automatically every Sunday at 00:00 UTC
-  workflow_dispatch:      # Enables manual execution button in GitHub Actions UI
+  workflow_dispatch:      # Manual "Run workflow" button in the Actions tab — no auto/scheduled runs
+    inputs:
+      mode:
+        description: 'Scrape mode'
+        required: true
+        default: 'mcq'
+        type: choice
+        options:
+          - mcq
+          - general
+      url:
+        description: 'Target URL (general mode only)'
+        required: false
+        default: ''
+      prompt:
+        description: 'What to extract (general mode only)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -30,12 +45,15 @@ jobs:
       - name: Execute Scraper Script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SCRAPE_MODE: ${{ github.event.inputs.mode || 'mcq' }}
+          SCRAPE_URL: ${{ github.event.inputs.url }}
+          SCRAPE_PROMPT: ${{ github.event.inputs.prompt }}
         run: python main.py
 
-      - name: Commit and Push Updated CSV
+      - name: Commit and Push Updated Data
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/mcqs.csv
-          git commit -m "Automated update: MCQ dataset CSV" || echo "No changes detected to commit."
+          git add data/
+          git commit -m "Manual scraper run (${{ github.event.inputs.mode }} mode)" || echo "No changes detected to commit."
           git push
