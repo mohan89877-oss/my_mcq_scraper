@@ -41,7 +41,7 @@ def get_graph_config(api_key: str) -> dict:
     return {
         "llm": {
             "api_key": api_key,
-            "model": "gemini/gemini-1.5-flash",
+            "model": "google_genai/gemini-1.5-flash",
         },
         "headless": True,
         "verbose": True,
@@ -97,6 +97,7 @@ def run_mcq_mode(api_key: str) -> None:
         csv_path = "data/mcqs.csv"
         file_exists = os.path.exists(csv_path)
         df_new = pd.DataFrame(all_mcqs)
+        # Append to existing history instead of overwriting it each run.
         df_new.to_csv(csv_path, mode="a", header=not file_exists, index=False)
         print(f"\nScraping complete! Total {len(all_mcqs)} questions saved to '{csv_path}'.")
     else:
